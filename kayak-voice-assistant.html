@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kayak Capital — Voice Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0a1628;
+    --navy-mid: #0f2040;
+    --navy-light: #1a3055;
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: #8a6f2e;
+    --cream: #f5f0e8;
+    --cream-dim: #c8bfa8;
+    --white: #ffffff;
+    --red: #e05252;
+    --green: #4caf82;
+    --blue-accent: #4a90d9;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--navy);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(74,144,217,0.05) 0%, transparent 50%),
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 60px,
+        rgba(255,255,255,0.012) 60px,
+        rgba(255,255,255,0.012) 61px
+      );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 520px;
+    padding: 40px 24px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+    width: 100%;
+  }
+
+  .logo-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .logo-paddle {
+    width: 28px;
+    height: 28px;
+    opacity: 0.85;
+  }
+
+  .brand-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: 0.04em;
+  }
+
+  .brand-sub {
+    font-size: 11px;
+    color: var(--cream-dim);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-weight: 300;
+  }
+
+  /* Orb / Visualizer */
+  .orb-container {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 10px auto 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .orb-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid;
+    animation: pulse-ring 3s ease-in-out infinite;
+  }
+
+  .orb-ring-1 {
+    width: 200px; height: 200px;
+    border-color: rgba(201,168,76,0.12);
+    animation-delay: 0s;
+  }
+
+  .orb-ring-2 {
+    width: 168px; height: 168px;
+    border-color: rgba(201,168,76,0.18);
+    animation-delay: 0.4s;
+  }
+
+  .orb-ring-3 {
+    width: 136px; height: 136px;
+    border-color: rgba(201,168,76,0.25);
+    animation-delay: 0.8s;
+  }
+
+  @keyframes pulse-ring {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.04); opacity: 0.6; }
+  }
+
+  .orb-core {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 35%, var(--gold-light), var(--gold), var(--gold-dim));
+    box-shadow:
+      0 0 32px rgba(201,168,76,0.3),
+      0 0 64px rgba(201,168,76,0.12),
+      inset 0 2px 8px rgba(255,255,255,0.25);
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .orb-core.listening {
+    animation: orb-breathe 1.2s ease-in-out infinite;
+    box-shadow:
+      0 0 48px rgba(201,168,76,0.5),
+      0 0 96px rgba(201,168,76,0.2),
+      inset 0 2px 8px rgba(255,255,255,0.3);
+  }
+
+  .orb-core.speaking {
+    animation: orb-speak 0.6s ease-in-out infinite;
+    background: radial-gradient(circle at 38% 35%, #a8d4f5, var(--blue-accent), #2a6aab);
+    box-shadow:
+      0 0 48px rgba(74,144,217,0.5),
+      0 0 96px rgba(74,144,217,0.2),
+      inset 0 2px 8px rgba(255,255,255,0.3);
+  }
+
+  .orb-core.thinking {
+    animation: orb-think 2s linear infinite;
+  }
+
+  @keyframes orb-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  @keyframes orb-speak {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05) scaleY(1.06); }
+  }
+
+  @keyframes orb-think {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(360deg); }
+  }
+
+  /* Audio bars */
+  .audio-bars {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 28px;
+    margin-bottom: 8px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .audio-bars.active { opacity: 1; }
+
+  .bar {
+    width: 3px;
+    background: var(--gold);
+    border-radius: 2px;
+    height: 6px;
+    transition: height 0.1s ease;
+  }
+
+  .audio-bars.listening .bar { background: var(--gold); }
+  .audio-bars.speaking .bar { background: var(--blue-accent); }
+
+  /* Status */
+  .status-line {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cream-dim);
+    margin-bottom: 32px;
+    height: 16px;
+    transition: color 0.3s;
+  }
+
+  .status-line.listening { color: var(--gold); }
+  .status-line.speaking { color: var(--blue-accent); }
+  .status-line.error { color: var(--red); }
+
+  /* Main button */
+  .btn-talk {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease;
+    position: relative;
+    margin-bottom: 16px;
+    background: var(--navy-light);
+    border: 2px solid var(--gold-dim);
+  }
+
+  .btn-talk:hover {
+    border-color: var(--gold);
+    box-shadow: 0 0 24px rgba(201,168,76,0.2);
+    transform: scale(1.03);
+  }
+
+  .btn-talk.active {
+    background: rgba(201,168,76,0.12);
+    border-color: var(--gold);
+    box-shadow: 0 0 32px rgba(201,168,76,0.3);
+  }
+
+  .btn-talk svg { pointer-events: none; }
+
+  .btn-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cream-dim);
+    font-weight: 500;
+    margin-bottom: 36px;
+  }
+
+  /* Transcript area */
+  .transcript-area {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    padding-bottom: 16px;
+    max-height: 320px;
+  }
+
+  .transcript-area::-webkit-scrollbar { width: 3px; }
+  .transcript-area::-webkit-scrollbar-track { background: transparent; }
+  .transcript-area::-webkit-scrollbar-thumb { background: var(--navy-light); border-radius: 2px; }
+
+  .bubble {
+    max-width: 88%;
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    animation: bubble-in 0.25s ease forwards;
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  @keyframes bubble-in {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .bubble.user {
+    align-self: flex-end;
+    background: var(--navy-light);
+    border: 1px solid rgba(201,168,76,0.2);
+    color: var(--cream);
+  }
+
+  .bubble.assistant {
+    align-self: flex-start;
+    background: rgba(201,168,76,0.08);
+    border: 1px solid rgba(201,168,76,0.15);
+    color: var(--cream);
+  }
+
+  .bubble.system {
+    align-self: center;
+    background: transparent;
+    border: none;
+    color: var(--cream-dim);
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.08em;
+    padding: 4px 0;
+  }
+
+  /* Suggestion chips */
+  .suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 24px;
+    justify-content: center;
+  }
+
+  .chip {
+    padding: 6px 13px;
+    border-radius: 20px;
+    border: 1px solid rgba(201,168,76,0.25);
+    background: rgba(201,168,76,0.05);
+    color: var(--cream-dim);
+    font-size: 11.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+  }
+
+  .chip:hover {
+    border-color: var(--gold);
+    color: var(--gold-light);
+    background: rgba(201,168,76,0.1);
+  }
+
+  /* Connection status dot */
+  .conn-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--red);
+    display: inline-block;
+    margin-right: 6px;
+    transition: background 0.3s;
+    vertical-align: middle;
+  }
+  .conn-dot.connected { background: var(--green); box-shadow: 0 0 8px rgba(76,175,130,0.5); }
+  .conn-dot.connecting { background: var(--gold); animation: blink 1s ease-in-out infinite; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .conn-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--cream-dim);
+    letter-spacing: 0.1em;
+  }
+
+  .conn-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  /* Error banner */
+  .error-banner {
+    display: none;
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(224,82,82,0.1);
+    border: 1px solid rgba(224,82,82,0.3);
+    border-radius: 8px;
+    color: #f08080;
+    font-size: 12px;
+    margin-bottom: 16px;
+    line-height: 1.4;
+  }
+  .error-banner.show { display: block; }
+
+  /* Divider */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(201,168,76,0.2), transparent);
+    margin: 8px 0 20px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="logo-mark">
+      <svg class="logo-paddle" viewBox="0 0 28 28" fill="none">
+        <ellipse cx="14" cy="14" rx="6" ry="11" stroke="#c9a84c" stroke-width="1.5" fill="none"/>
+        <line x1="14" y1="3" x2="14" y2="25" stroke="#c9a84c" stroke-width="1.5"/>
+        <line x1="8" y1="14" x2="20" y2="14" stroke="#c9a84c" stroke-width="1.2" opacity="0.6"/>
+        <circle cx="14" cy="14" r="2.5" fill="#c9a84c" opacity="0.4"/>
+      </svg>
+      <span class="brand-name">Kayak Capital</span>
+    </div>
+    <div class="brand-sub">Portfolio Voice Assistant</div>
+  </div>
+
+  <div class="conn-bar">
+    <span class="conn-dot" id="connDot"></span>
+    <span class="conn-label" id="connLabel">NOT CONNECTED</span>
+  </div>
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="orb-container">
+    <div class="orb-ring orb-ring-1"></div>
+    <div class="orb-ring orb-ring-2"></div>
+    <div class="orb-ring orb-ring-3"></div>
+    <div class="orb-core" id="orbCore"></div>
+  </div>
+
+  <div class="audio-bars" id="audioBars">
+    <div class="bar" style="height:8px"></div>
+    <div class="bar" style="height:14px"></div>
+    <div class="bar" style="height:20px"></div>
+    <div class="bar" style="height:12px"></div>
+    <div class="bar" style="height:22px"></div>
+    <div class="bar" style="height:10px"></div>
+    <div class="bar" style="height:18px"></div>
+    <div class="bar" style="height:7px"></div>
+    <div class="bar" style="height:15px"></div>
+  </div>
+
+  <div class="status-line" id="statusLine">tap to connect</div>
+
+  <button class="btn-talk" id="btnTalk" onclick="toggleSession()">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z" fill="#c9a84c"/>
+      <path d="M6 10a6 6 0 0 0 12 0" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+      <line x1="12" y1="16" x2="12" y2="20" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="9" y1="20" x2="15" y2="20" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+  </button>
+  <div class="btn-label" id="btnLabel">Hold to Start</div>
+
+  <div class="divider"></div>
+
+  <div class="suggestions" id="suggestions">
+    <div class="chip" onclick="sendTextPrompt(this.textContent)">Who's behind on payments?</div>
+    <div class="chip" onclick="sendTextPrompt(this.textContent)">Total portfolio size?</div>
+    <div class="chip" onclick="sendTextPrompt(this.textContent)">Top 5 loans by size</div>
+    <div class="chip" onclick="sendTextPrompt(this.textContent)">Monthly interest income</div>
+    <div class="chip" onclick="sendTextPrompt(this.textContent)">BlueShore balance</div>
+    <div class="chip" onclick="sendTextPrompt(this.textContent)">Loans in Phoenix</div>
+  </div>
+
+  <div class="transcript-area" id="transcriptArea"></div>
+
+</div>
+
+<script>
+// ─── CONFIG ─────────────────────────────────────────────────────────────────
+const GEMINI_API_KEY = 'AIzaSyDAhwUYgb-E9a6fiE4H8T8Lz7hMn-6riXM';
+const AIRTABLE_API_KEY = 'YOUR_AIRTABLE_PAT'; // Replace with your Airtable Personal Access Token
+const AIRTABLE_BASE_ID = 'appXSWSJnqspX9dg1';
+const AIRTABLE_TABLE_ID = 'tblWcAPR1gDw9WBbb';
+const MODEL = 'models/gemini-2.0-flash-live-001';
+const WS_URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${GEMINI_API_KEY}`;
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let ws = null;
+let audioContext = null;
+let playbackContext = null;
+let mediaStream = null;
+let scriptProcessor = null;
+let isConnected = false;
+let isListening = false;
+let playbackQueue = [];
+let isPlaying = false;
+let portfolioData = null;
+let userTranscriptBuffer = '';
+let assistantTranscriptBuffer = '';
+
+// ─── UI HELPERS ──────────────────────────────────────────────────────────────
+const orbCore = document.getElementById('orbCore');
+const audioBars = document.getElementById('audioBars');
+const statusLine = document.getElementById('statusLine');
+const btnTalk = document.getElementById('btnTalk');
+const btnLabel = document.getElementById('btnLabel');
+const connDot = document.getElementById('connDot');
+const connLabel = document.getElementById('connLabel');
+const errorBanner = document.getElementById('errorBanner');
+const transcriptArea = document.getElementById('transcriptArea');
+const bars = document.querySelectorAll('.bar');
+
+function setStatus(state, text) {
+  statusLine.className = 'status-line ' + state;
+  statusLine.textContent = text;
+}
+
+function setConn(state, text) {
+  connDot.className = 'conn-dot ' + state;
+  connLabel.textContent = text;
+}
+
+function setOrb(state) {
+  orbCore.className = 'orb-core ' + state;
+  audioBars.className = 'audio-bars ' + (state ? 'active ' + state : '');
+}
+
+function showError(msg) {
+  errorBanner.textContent = msg;
+  errorBanner.classList.add('show');
+  setStatus('error', 'error');
+  setTimeout(() => errorBanner.classList.remove('show'), 6000);
+}
+
+function addBubble(type, text) {
+  if (!text.trim()) return;
+  const div = document.createElement('div');
+  div.className = `bubble ${type}`;
+  div.textContent = text;
+  transcriptArea.appendChild(div);
+  transcriptArea.scrollTop = transcriptArea.scrollHeight;
+}
+
+function animateBars() {
+  bars.forEach(b => {
+    const h = Math.floor(Math.random() * 18) + 5;
+    b.style.height = h + 'px';
+  });
+}
+
+setInterval(() => {
+  if (isListening || isPlaying) animateBars();
+}, 120);
+
+// ─── AIRTABLE ────────────────────────────────────────────────────────────────
+async function fetchPortfolioData() {
+  addBubble('system', '⟳ fetching live portfolio data...');
+  try {
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${AIRTABLE_TABLE_ID}?view=viwyQvOpgp9orDdx2&pageSize=100`;
+    const resp = await fetch(url, {
+      headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` }
+    });
+    if (!resp.ok) throw new Error(`Airtable error: ${resp.status}`);
+    const data = await resp.json();
+    portfolioData = processAirtableData(data.records);
+    addBubble('system', `✓ ${portfolioData.totalLoans} loans loaded · $${(portfolioData.totalNR/1e6).toFixed(2)}M deployed`);
+    return portfolioData;
+  } catch(e) {
+    // Fall back to demo data if Airtable key not configured
+    portfolioData = getDemoData();
+    addBubble('system', '⚠ using sample data — add Airtable key to see live numbers');
+    return portfolioData;
+  }
+}
+
+function processAirtableData(records) {
+  const loans = records.map(r => ({
+    borrower: r.fields['Name'] || r.fields['Borrower'] || 'Unknown',
+    address: r.fields['Address'] || r.fields['Property Address'] || '',
+    city: r.fields['City'] || '',
+    nr: parseFloat(r.fields['NR'] || r.fields['NR Amount'] || r.fields['Loan Amount'] || 0),
+    rate: parseFloat(r.fields['Rate'] || r.fields['Interest Rate'] || 12),
+    fund: r.fields['Fund Source'] || r.fields['Fund'] || 'Unknown',
+    status: r.fields['Status'] || 'Active',
+    days: r.fields['Days Outstanding'] || 0,
+  })).filter(l => l.nr > 0);
+
+  const totalNR = loans.reduce((s, l) => s + l.nr, 0);
+  const monthlyIncome = loans.reduce((s, l) => s + (l.nr * l.rate / 100 / 12), 0);
+  const fundBreakdown = {};
+  loans.forEach(l => {
+    fundBreakdown[l.fund] = (fundBreakdown[l.fund] || 0) + l.nr;
+  });
+  const cities = {};
+  loans.forEach(l => {
+    if (l.city) cities[l.city] = (cities[l.city] || 0) + 1;
+  });
+
+  return { loans, totalNR, totalLoans: loans.length, monthlyIncome, fundBreakdown, cities };
+}
+
+function getDemoData() {
+  const loans = [
+    { borrower: 'Martinez LLC', address: '4521 W Camelback Rd', city: 'Phoenix', nr: 485000, rate: 12, fund: 'Smith', days: 180 },
+    { borrower: 'Desert Homes Inc', address: '7823 E McDowell Rd', city: 'Scottsdale', nr: 620000, rate: 12, fund: 'Smith', days: 220 },
+    { borrower: 'AZ Realty Group', address: '1205 N 32nd St', city: 'Phoenix', nr: 375000, rate: 12, fund: 'Cash', days: 95 },
+    { borrower: 'Sunbelt Investors', address: '9901 E Shea Blvd', city: 'Scottsdale', nr: 890000, rate: 12.9, fund: 'BlueShore', days: 310 },
+    { borrower: 'Valley Fix & Flip', address: '3344 W Indian School', city: 'Phoenix', nr: 295000, rate: 12, fund: 'Smith', days: 45 },
+    { borrower: 'Pinnacle Properties', address: '2200 E Thomas Rd', city: 'Phoenix', nr: 540000, rate: 12, fund: 'GoldWater', days: 180 },
+    { borrower: 'Buhrow & Bockting', address: '511 W Ocotillo Rd', city: 'Chandler', nr: 420000, rate: 12, fund: 'Smith', days: 150 },
+    { borrower: 'Mesa Builders', address: '445 S Dobson Rd', city: 'Mesa', nr: 310000, rate: 12, fund: 'Cash', days: 88 },
+    { borrower: 'Tempe Ventures', address: '1100 E Broadway', city: 'Tempe', nr: 475000, rate: 12, fund: 'BlueShore', days: 200 },
+    { borrower: 'Glendale Rehab Co', address: '5544 W Bethany', city: 'Glendale', nr: 255000, rate: 12, fund: 'Cash', days: 60 },
+  ];
+  const totalNR = loans.reduce((s,l) => s+l.nr, 0);
+  const monthlyIncome = loans.reduce((s,l) => s+(l.nr*l.rate/100/12), 0);
+  const fundBreakdown = {};
+  loans.forEach(l => fundBreakdown[l.fund] = (fundBreakdown[l.fund]||0)+l.nr);
+  const cities = {};
+  loans.forEach(l => cities[l.city] = (cities[l.city]||0)+1);
+  return { loans, totalNR, totalLoans: loans.length, monthlyIncome, fundBreakdown, cities };
+}
+
+function buildSystemPrompt(data) {
+  const top5 = [...data.loans].sort((a,b) => b.nr-a.nr).slice(0,5);
+  const fundStr = Object.entries(data.fundBreakdown)
+    .map(([f,v]) => `${f}: $${(v/1e6).toFixed(2)}M`).join(', ');
+  const cityStr = Object.entries(data.cities)
+    .sort((a,b) => b[1]-a[1]).slice(0,5)
+    .map(([c,n]) => `${c}(${n})`).join(', ');
+
+  return `You are the Kayak Capital portfolio voice assistant. You work exclusively for Barry Luchtel, owner of Kayak Capital LLC (AZ BK-0932150), a private hard money lender in Scottsdale, AZ specializing in non-owner-occupied fix-and-flip and bridge loans in the Phoenix Metro area.
+
+LIVE PORTFOLIO SNAPSHOT (as of right now):
+- Total Notes Receivable deployed: $${(data.totalNR/1e6).toFixed(2)}M
+- Total active loans: ${data.totalLoans}
+- Monthly interest income: $${data.monthlyIncome.toLocaleString('en-US',{maximumFractionDigits:0})}
+- Annual run rate: $${(data.monthlyIncome*12).toLocaleString('en-US',{maximumFractionDigits:0})}
+- Fund source breakdown: ${fundStr}
+- Top cities by loan count: ${cityStr}
+- Top 5 loans by size: ${top5.map(l => `${l.borrower} (${l.city}) $${l.nr.toLocaleString()}`).join('; ')}
+
+FULL LOAN LIST:
+${data.loans.map(l => `• ${l.borrower} | ${l.address}, ${l.city} | $${l.nr.toLocaleString()} | ${l.rate}% | ${l.fund} | ${l.days} days`).join('\n')}
+
+INSTRUCTIONS:
+- Be concise, direct, and confident. Barry moves fast.
+- Answer in plain spoken language — no markdown, no bullet points, just clean sentences.
+- Lead with the number or the answer, then context.
+- You know Kayak Capital's key people: Landon (partner), Kat (accounting), Kim, Molly.
+- Standard loan rate is 12%. BlueShore and GoldWater are fund sources Barry uses.
+- If asked about trends, patterns, or anything not in the data, say so honestly.
+- Keep responses under 4 sentences unless Barry asks for detail.`;
+}
+
+// ─── GEMINI LIVE WEBSOCKET ────────────────────────────────────────────────────
+async function toggleSession() {
+  if (isConnected) {
+    stopSession();
+  } else {
+    await startSession();
+  }
+}
+
+async function startSession() {
+  try {
+    setConn('connecting', 'CONNECTING...');
+    setStatus('', 'loading portfolio...');
+    btnLabel.textContent = 'Loading...';
+
+    // Fetch Airtable data first
+    const data = await fetchPortfolioData();
+    const systemPrompt = buildSystemPrompt(data);
+
+    // Mic permission
+    mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    // WebSocket
+    ws = new WebSocket(WS_URL);
+
+    ws.onopen = () => {
+      // Send setup
+      ws.send(JSON.stringify({
+        setup: {
+          model: MODEL,
+          generationConfig: {
+            responseModalities: ['AUDIO'],
+            speechConfig: {
+              voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Charon' } }
+            }
+          },
+          systemInstruction: {
+            parts: [{ text: systemPrompt }]
+          }
+        }
+      }));
+    };
+
+    ws.onmessage = (event) => handleServerMessage(event);
+    ws.onerror = (e) => { showError('WebSocket error. Check your API key.'); stopSession(); };
+    ws.onclose = () => { if (isConnected) stopSession(); };
+
+  } catch(e) {
+    showError(e.message || 'Could not start session. Check mic permissions.');
+    setConn('', 'NOT CONNECTED');
+    btnLabel.textContent = 'Hold to Start';
+  }
+}
+
+function handleServerMessage(event) {
+  let msg;
+  try { msg = JSON.parse(event.data); } catch(e) { return; }
+
+  // Setup complete
+  if (msg.setupComplete) {
+    isConnected = true;
+    setConn('connected', 'CONNECTED');
+    setStatus('listening', 'listening...');
+    setOrb('listening');
+    isListening = true;
+    btnTalk.classList.add('active');
+    btnLabel.textContent = 'Tap to Stop';
+    startMicCapture();
+    addBubble('system', '— session started —');
+    return;
+  }
+
+  if (!msg.serverContent) return;
+  const sc = msg.serverContent;
+
+  // Audio output
+  if (sc.modelTurn?.parts) {
+    for (const part of sc.modelTurn.parts) {
+      if (part.inlineData?.data) {
+        const raw = atob(part.inlineData.data);
+        const pcm = new Int16Array(raw.length / 2);
+        for (let i = 0; i < pcm.length; i++) {
+          pcm[i] = (raw.charCodeAt(i*2)) | (raw.charCodeAt(i*2+1) << 8);
+        }
+        playbackQueue.push(pcm);
+        if (!isPlaying) drainPlaybackQueue();
+      }
+    }
+  }
+
+  // Transcriptions
+  if (sc.inputTranscription?.text) {
+    userTranscriptBuffer += sc.inputTranscription.text;
+  }
+  if (sc.outputTranscription?.text) {
+    assistantTranscriptBuffer += sc.outputTranscription.text;
+  }
+
+  // Turn complete
+  if (sc.turnComplete) {
+    if (userTranscriptBuffer.trim()) {
+      addBubble('user', userTranscriptBuffer.trim());
+      userTranscriptBuffer = '';
+    }
+    if (assistantTranscriptBuffer.trim()) {
+      addBubble('assistant', assistantTranscriptBuffer.trim());
+      assistantTranscriptBuffer = '';
+    }
+    setOrb('listening');
+    setStatus('listening', 'listening...');
+    isListening = true;
+  }
+
+  // Model started speaking
+  if (sc.modelTurn) {
+    setOrb('speaking');
+    setStatus('speaking', 'speaking...');
+    isListening = false;
+  }
+}
+
+// ─── MIC CAPTURE ─────────────────────────────────────────────────────────────
+function startMicCapture() {
+  audioContext = new AudioContext({ sampleRate: 16000 });
+  const source = audioContext.createMediaStreamSource(mediaStream);
+  scriptProcessor = audioContext.createScriptProcessor(2048, 1, 1);
+
+  scriptProcessor.onaudioprocess = (e) => {
+    if (!isConnected || !ws || ws.readyState !== WebSocket.OPEN) return;
+    const float32 = e.inputBuffer.getChannelData(0);
+    const int16 = new Int16Array(float32.length);
+    for (let i = 0; i < float32.length; i++) {
+      int16[i] = Math.max(-32768, Math.min(32767, float32[i] * 32767));
+    }
+    const b64 = btoa(String.fromCharCode(...new Uint8Array(int16.buffer)));
+    ws.send(JSON.stringify({
+      realtimeInput: {
+        mediaChunks: [{ mimeType: 'audio/pcm;rate=16000', data: b64 }]
+      }
+    }));
+  };
+
+  source.connect(scriptProcessor);
+  scriptProcessor.connect(audioContext.destination);
+}
+
+// ─── AUDIO PLAYBACK ───────────────────────────────────────────────────────────
+async function drainPlaybackQueue() {
+  if (playbackQueue.length === 0) {
+    isPlaying = false;
+    return;
+  }
+  isPlaying = true;
+
+  if (!playbackContext) {
+    playbackContext = new AudioContext({ sampleRate: 24000 });
+  }
+
+  const pcm = playbackQueue.shift();
+  const buffer = playbackContext.createBuffer(1, pcm.length, 24000);
+  const chan = buffer.getChannelData(0);
+  for (let i = 0; i < pcm.length; i++) chan[i] = pcm[i] / 32768;
+
+  const src = playbackContext.createBufferSource();
+  src.buffer = buffer;
+  src.connect(playbackContext.destination);
+  src.onended = () => drainPlaybackQueue();
+  src.start();
+}
+
+// ─── STOP SESSION ─────────────────────────────────────────────────────────────
+function stopSession() {
+  isConnected = false;
+  isListening = false;
+  isPlaying = false;
+  playbackQueue = [];
+
+  if (scriptProcessor) { scriptProcessor.disconnect(); scriptProcessor = null; }
+  if (audioContext) { audioContext.close(); audioContext = null; }
+  if (playbackContext) { playbackContext.close(); playbackContext = null; }
+  if (mediaStream) { mediaStream.getTracks().forEach(t => t.stop()); mediaStream = null; }
+  if (ws) { ws.close(); ws = null; }
+
+  setConn('', 'NOT CONNECTED');
+  setStatus('', 'tap to connect');
+  setOrb('');
+  btnTalk.classList.remove('active');
+  btnLabel.textContent = 'Hold to Start';
+  addBubble('system', '— session ended —');
+}
+
+// ─── TEXT PROMPT FALLBACK ─────────────────────────────────────────────────────
+async function sendTextPrompt(text) {
+  if (!isConnected || !ws || ws.readyState !== WebSocket.OPEN) {
+    // If not connected, start session first then send
+    await startSession();
+    setTimeout(() => sendTextPrompt(text), 1500);
+    return;
+  }
+  addBubble('user', text);
+  ws.send(JSON.stringify({
+    clientContent: {
+      turns: [{ role: 'user', parts: [{ text }] }],
+      turnComplete: true
+    }
+  }));
+}
+</script>
+</body>
+</html>
